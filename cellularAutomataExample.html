@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#main{
+line-height:0px;
+margin-left:auto;
+margin-right:auto;
+}
+.cell{
+  width:10px;
+  height:10px;
+  margin:.1px;
+  border:.1px solid #DDD;
+  display: inline-block;
+}
+.active{
+  background-color:purple;
+}
+
+.inactive{
+  background-color:#EEE;
+}
+.row{
+  margin:0px;
+  padding:0px;
+  display:table-row;
+}
+</style>
+<meta charset="utf-8">
+<title>Simple unidimentional Cellular Automata example with javascript in a html file</title>
+</head>
+<body>
+</body>
+<script>
+
+const ruleList00 =[
+[1,1,1,0],
+[1,1,0,0],
+[1,0,1,0],
+[1,0,0,0],
+[0,1,1,0],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList01 =[
+[1,1,1,0],
+[1,1,0,0],
+[1,0,1,1],
+[1,0,0,1],
+[0,1,1,0],
+[0,1,0,1],
+[0,0,1,1],
+[0,0,0,0],
+]
+
+const ruleList02 =[
+[1,1,1,0],
+[1,1,0,0],
+[1,0,1,0],
+[1,0,0,1],
+[0,1,1,0],
+[0,1,0,1],
+[0,0,1,1],
+[0,0,0,0],
+]
+
+const ruleList03 =[
+[1,1,1,1],
+[1,1,0,0],
+[1,0,1,0],
+[1,0,0,0],
+[0,1,1,0],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList04 =[
+[1,1,1,0],
+[1,1,0,1],
+[1,0,1,1],
+[1,0,0,1],
+[0,1,1,1],
+[0,1,0,1],
+[0,0,1,1],
+[0,0,0,0],
+]
+
+const ruleList05 =[
+[1,1,1,0],
+[1,1,0,1],
+[1,0,1,1],
+[1,0,0,0],
+[0,1,1,1],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList06 =[
+[1,1,1,1],
+[1,1,0,1],
+[1,0,1,1],
+[1,0,0,0],
+[0,1,1,0],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList07 =[
+[1,1,1,1],
+[1,1,0,0],
+[1,0,1,0],
+[1,0,0,1],
+[0,1,1,1],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList08 =[
+[1,1,1,1],
+[1,1,0,0],
+[1,0,1,0],
+[1,0,0,0],
+[0,1,1,0],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+]
+
+const ruleList09 =[
+[1,1,1,0],
+[1,1,0,1],
+[1,0,1,0],
+[1,0,0,1],
+[0,1,1,0],
+[0,1,0,1],
+[0,0,1,1],
+[0,0,0,0],
+]
+
+const ROW_SIZE=parseInt((window.innerWidth/10)*0.9)
+
+const STATE = {
+  'ACTIVE':1,
+  'INACTIVE':0,
+  'CSSClassName':function(state){
+    switch(state){
+      case STATE.INACTIVE : return 'inactive'
+      case STATE.ACTIVE : return 'active'
+      default: console.error('ERROR:'+state+' is not a valid STATE.')
+    }
+  },
+  'fromString':function(stateName){
+    switch(stateName.toUpperCase()){
+      case 'inactive'.toUpperCase() : return STATE.INACTIVE
+      case 'active'.toUpperCase() : return STATE.ACTIVE
+      default: console.error('ERROR:'+stateName+' is not a valid STATE.')
+    }
+  }
+}
+
+keyboardSetup = function(){
+document.addEventListener("keydown", function (event) {
+if (event.defaultPrevented) {
+  return
+}
+switch (event.key) {
+  case 'r'||'R':
+    createInitialRandomRow()
+    break
+  case '0':
+    createBoringInitialRow()
+    break
+  case '1':
+    play(ruleList01);
+    break
+  case '2':
+    play(ruleList02);
+    break
+  case '3':
+    play(ruleList03);
+    break
+  case '4':
+      play(ruleList04)
+      break
+  case '5':
+      play(ruleList05)
+      break
+  case '6':
+      play(ruleList06)
+      break
+  case '7':
+      play(ruleList07)
+      break
+  case '8':
+    play(ruleList08)
+    break
+  case "Escape":
+    window.clearInterval(intervalID)
+    break
+}
+event.preventDefault()
+}, true)
+}
+
+init = function(){
+  let main = document.createElement("div")
+  main.id = "main"
+  document.body.appendChild(main)
+}
+
+scroollDown = function(lines){
+window.scrollTo(0, document.getElementById("main").childNodes.length*10)+lines||0
+}
+
+createCell = function(active,row){
+  let cell = document.createElement("div")
+  cell.classList.add("cell")
+  cell.classList.add((active==1?'active':'inactive'))
+  row.appendChild(cell)
+}
+
+randomBinaryState = function(){
+  return Math.floor(Math.random() *2)
+}
+
+createInitialRandomRow = function(){
+  let row = document.createElement("div")
+  row.classList.add("row")
+  for(let i=0;i<ROW_SIZE;i++){
+    createCell(randomBinaryState(),row)
+  }
+  document.getElementById('main').appendChild(row)
+  return row
+}
+
+createBoringInitialRow = function(){
+  let row = document.createElement("div")
+  row.classList.add("row")
+  for(let i=0;i<ROW_SIZE;i++){
+    if(i==parseInt(ROW_SIZE/2)-1)
+      createCell(STATE.ACTIVE,row)
+    else
+    createCell(STATE.INACTIVE,row)
+  }
+  document.getElementById('main').appendChild(row)
+  return row
+}
+
+getCellState = function(cell){
+  let state = cell.classList.contains('active')
+  return (state?STATE.ACTIVE:STATE.INACTIVE)
+}
+
+changeCellState = function(cell,state){
+    cell.classList.remove('inactive')
+    cell.classList.remove('active')
+    cell.classList.add(STATE.CSSClassName(state))
+}
+
+matchRuleState = function(rule,cell){
+  let previousCell = cell.previousElementSibling || cell.parentNode.lastChild
+  let nextCell = cell.nextElementSibling || cell.parentNode.firstChild
+  if(
+    rule[0] == getCellState(previousCell)&&
+    rule[1] == getCellState(cell)&&
+    rule[2] ==getCellState(nextCell)
+  ){
+    return {'match':true,'state':rule[3]}
+  }
+  return {'match':false}
+}
+
+applyRuleList = function(ruleList,previousStateCell,newStateCell){
+  ruleList.map(function(rule){
+    let ruleStateResult = matchRuleState(rule,previousStateCell)
+      if(ruleStateResult.match)
+          changeCellState(newStateCell,ruleStateResult.state)
+  })
+}
+
+newRowFromPreviousWithRules = function(rules){
+  let lastRow = document.getElementById("main").lastChild
+  let newRow = lastRow.cloneNode(true)
+  document.getElementById('main').appendChild(newRow)
+  let previewStatecells = lastRow.childNodes
+  let nextStateCells = newRow.childNodes
+  for(let i=0;i < ROW_SIZE;i++){
+      applyRuleList(rules,previewStatecells[i],nextStateCells[i])
+  }
+}
+
+runCellularAutomata = function(ruleList){
+    keyboardSetup()
+    newRowFromPreviousWithRules(ruleList)
+    scroollDown()
+}
+
+play = function(ruleList){
+window.clearInterval(intervalID)
+intervalID = window.setInterval(runCellularAutomata,100,ruleList)
+}
+
+let intervalID
+init()
+createBoringInitialRow()
+play(ruleList08)
+</script>
+</html>
